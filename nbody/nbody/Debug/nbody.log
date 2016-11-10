@@ -1,0 +1,5 @@
+﻿  main.cpp
+c:\program files (x86)\windows kits\8.1\include\shared\minwindef.h(130): warning C4005: 'APIENTRY': macro redefinition
+  c:\users\40111906\desktop\cw2\nbody\include\glfw\glfw3.h(85): note: see previous definition of 'APIENTRY'
+  nbody.vcxproj -> C:\Users\40111906\Desktop\cw2\nbody\Debug\nbody.exe
+  nbody.vcxproj -> C:\Users\40111906\Desktop\cw2\nbody\Debug\nbody.pdb (Full PDB)
