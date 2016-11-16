@@ -1,0 +1,15 @@
+﻿  main.cpp
+C:\Program Files (x86)\Windows Kits\8.1\Include\shared\minwindef.h(130): warning C4005: 'APIENTRY': macro redefinition
+  E:\Users\Grant\Documents\Uni\NBody\nbody\include\GLFW/glfw3.h(85): note: see previous definition of 'APIENTRY'
+main.cpp(41): warning C4305: 'initializing': truncation from 'double' to 'float'
+main.cpp(61): warning C4018: '<': signed/unsigned mismatch
+main.cpp(63): warning C4018: '<': signed/unsigned mismatch
+main.cpp(132): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
+main.cpp(133): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
+main.cpp(135): warning C4018: '<': signed/unsigned mismatch
+  Generating code
+  5 of 702 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+    2 functions were new in current compilation
+    6 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  nbody.vcxproj -> E:\Users\Grant\Documents\Uni\NBody\nbody\Release\nbody.exe
