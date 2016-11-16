@@ -1,4 +1,13 @@
-﻿  Node.cpp
+﻿  main.cpp
 c:\program files (x86)\windows kits\8.1\include\shared\minwindef.h(130): warning C4005: 'APIENTRY': macro redefinition
   e:\users\grant\documents\uni\nbody\nbody\include\glfw\glfw3.h(85): note: see previous definition of 'APIENTRY'
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(37): warning C4305: 'initializing': truncation from 'double' to 'float'
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(61): warning C4018: '<': signed/unsigned mismatch
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(62): warning C4018: '<': signed/unsigned mismatch
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(68): warning C4018: '<': signed/unsigned mismatch
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(121): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(122): warning C4018: '<': signed/unsigned mismatch
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(123): warning C4018: '<': signed/unsigned mismatch
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(126): warning C4305: '=': truncation from 'double' to 'float'
+e:\users\grant\documents\uni\nbody\nbody\nbody\main.cpp(147): warning C4244: '=': conversion from '__int64' to 'long', possible loss of data
   nbody.vcxproj -> E:\Users\Grant\Documents\Uni\NBody\nbody\Debug\nbody.exe
