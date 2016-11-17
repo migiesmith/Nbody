@@ -6,6 +6,7 @@
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "FreeImage.lib")
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -45,6 +46,9 @@ const float PHYSICS_TIME = 10.0f;
 const float DAMPENING = 0.99f;
 const float SIM_WIDTH = 1000.0f;
 const float SIM_HEIGHT = 1000.0f;
+const float SIM_DEPTH = 1000.0f;
+
+vec3 camPos = vec3(-SIM_WIDTH*1.5f, 0.0f, SIM_DEPTH*0.6f);
 
 
 void init() {
@@ -55,9 +59,44 @@ void init() {
 	shaders["colourPass"] = colourShader;
 }
 
+void renderCube(const float width, const float height, const float depth) {
+	Shader* currentShader = Renderer::getInstance().getActiveShader();
+	glUniform4f(currentShader->getUniformLoc("colour"), 0.5f, 0.0f, 0.0f, 1.0f);
+	glBegin(GL_LINE_LOOP);
+	glVertex3f(-width / 2, -height / 2, -depth / 2);
+	glVertex3f(-width / 2, height / 2, -depth / 2);
+	glVertex3f(width / 2, height / 2, -depth / 2);
+	glVertex3f(width / 2, -height / 2, -depth / 2);
+	glEnd();
+
+	glBegin(GL_LINE_LOOP);
+	glVertex3f(-width / 2, -height / 2, depth / 2);
+	glVertex3f(-width / 2, height / 2, depth / 2);
+	glVertex3f(width / 2, height / 2, depth / 2);
+	glVertex3f(width / 2, -height / 2, depth / 2);
+	glEnd();
+
+	glBegin(GL_LINES);
+	glVertex3f(-width / 2, -height / 2, -depth / 2);
+	glVertex3f(-width / 2, -height / 2, depth / 2);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(-width / 2, height / 2, -depth / 2);
+	glVertex3f(-width / 2, height / 2, depth / 2);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(width / 2, -height / 2, -depth / 2);
+	glVertex3f(width / 2, -height / 2, depth / 2);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(width / 2, height / 2, -depth / 2);
+	glVertex3f(width / 2, height / 2, depth / 2);
+	glEnd();
+}
+
 void calcForce() {
 	float EPS = 3E4;
-#pragma omp parallel for num_threads(6)
+#pragma omp parallel for num_threads(8)
 	for (int i = 0; i < particles.size(); i++) {
 		vec3 vel = vec3(0.0f, 0.0f, 0.0f);
 		for (int j = 0; j < particles.size(); j++) {
@@ -75,26 +114,41 @@ void calcForce() {
 
 		particles[i]->pos.x = min(max(particles[i]->pos.x, -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
 		particles[i]->pos.y = min(max(particles[i]->pos.y, -SIM_HEIGHT / 2.0f), SIM_HEIGHT / 2.0f);
+		particles[i]->pos.z = min(max(particles[i]->pos.z, -SIM_DEPTH / 2.0f), SIM_DEPTH / 2.0f);
 	}
 }
 
 void update(float deltaTime) {
 	calcForce();
+
+	vec4 newCamPos = vec4(camPos, 1.0f) * glm::rotate(mat4(1.0f), pi<float>() * 0.001f, vec3(0, 1, 0));
+	camPos.x = newCamPos.x;
+	camPos.y = newCamPos.y;
+	camPos.z = newCamPos.z;
+}
+
+void updateCUDA(float deltaTime) {
+	//calcForce();
+
+	vec4 newCamPos = vec4(camPos, 1.0f) * glm::rotate(mat4(1.0f), pi<float>() * 0.001f, vec3(0, 1, 0));
+	camPos.x = newCamPos.x;
+	camPos.y = newCamPos.y;
+	camPos.z = newCamPos.z;
 }
 
 void render() {
 
 	Renderer::getInstance().bindShader(shaders["colourPass"]);
 
-	// Set the MVP matrix
+	// Get the active shader
 	Shader* currentShader = Renderer::getInstance().getActiveShader();
 
 	float ratio = (float)Renderer::getWidth() / (float)Renderer::getHeight();
 	float w = SIM_WIDTH;
 	float h = SIM_HEIGHT * (1.0f / ratio);
-	mat4 MVP = glm::translate(glm::ortho(-w,w,h,-h, 0.5f, 1000.0f), vec3(0.0f, 0.0f, -100.0f));
-	//mat4 MVP = glm::translate(glm::perspective(90.0f, ratio, 0.5f, 5000.0f), vec3(0,0,-100.0f));
 
+	// Set the MVP matrix
+	mat4 MVP = glm::perspective(45.0f, ratio, 0.5f, 5000.0f) * glm::lookAt(camPos, vec3(0, 0, 0), vec3(0, 1, 0));
 	glUniformMatrix4fv(currentShader->getUniformLoc("MVP"), 1, false, value_ptr(MVP));
 
 	glDisable(GL_CULL_FACE);
@@ -108,7 +162,9 @@ void render() {
 		glVertex3f(p->pos.x, p->pos.y, p->pos.z);
 		glEnd();
 	}
-	
+
+	renderCube(SIM_WIDTH, SIM_HEIGHT, SIM_DEPTH);
+
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -127,26 +183,34 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 }
 
 void generateParticles(int particleCount) {
+	particles.reserve(particleCount);
 	std::mt19937 rng;
 	rng.seed(std::random_device()());
 	std::uniform_int_distribution<std::mt19937::result_type> distW(0, SIM_WIDTH*0.9f);
 	std::uniform_int_distribution<std::mt19937::result_type> distH(0, SIM_HEIGHT*0.9f);
+	std::uniform_int_distribution<std::mt19937::result_type> distD(0, SIM_DEPTH*0.9f);
 
 	for (unsigned int i = 0; i < particleCount; i++) {
 			Particle* p = new Particle();
-			p->pos = vec3(distW(rng) - SIM_WIDTH*0.5f, distH(rng) - SIM_HEIGHT*0.5f, 0);
+			p->pos = vec3(distW(rng) - SIM_WIDTH*0.5f, distH(rng) - SIM_HEIGHT*0.5f, distD(rng) - SIM_DEPTH*0.5f);
 			particles.push_back(p);
 	}
 }
 
-int main()
-{
+int main(){
+	bool useCUDA = false;
 	generateParticles(2048);
 	
 
 	// Set the functions for the renderer to call
 	Renderer::getInstance().setInit(init);
-	Renderer::getInstance().setUpdate(update);
+
+	if (useCUDA) {
+		Renderer::getInstance().setUpdate(updateCUDA);
+	}else{
+		Renderer::getInstance().setUpdate(update);
+	}
+
 	Renderer::getInstance().setRender(render);
 	Renderer::getInstance().setKeyCallback(keyCallback);
 	
