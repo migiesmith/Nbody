@@ -2,6 +2,13 @@
 
 using namespace std;
 
+#ifndef KERNEL
+	#define KERNEL
+	Particle *bufferIN, *bufferOUT;
+	vector<Particle> &outParticles = vector<Particle>();
+	auto dataSize = sizeof(Particle) * PARTICLE_COUNT;
+#endif // !KERNEL
+
 __global__ void calcForce(const Particle *in, Particle *out) {
 	// Get block index
 	unsigned int blockIDX = blockIdx.x;
@@ -15,7 +22,7 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 	Particle other;
 
 	float vel[3] = { 0.0f, 0.0f, 0.0f };
-	for (int j = 0; j < 2048; j++) {
+	for (int j = 0; j < PARTICLE_COUNT; j++) {
 		other = in[j];
 		if (idx == j)
 			continue;
@@ -46,35 +53,54 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 	out[idx].pos[2] = min(max(out[idx].pos[2], -SIM_DEPTH / 2.0f), SIM_DEPTH / 2.0f);
 }
 
-void updateParticles(vector<Particle*> &particles) {
-	const int ELEMENTS = particles.size();
-	auto dataSize = sizeof(Particle) * ELEMENTS;
-	vector<Particle> in(ELEMENTS);
-	vector<Particle> out(ELEMENTS);
+void swapBuffers() {
 
-	for (unsigned int i = 0; i < ELEMENTS; i++) {
-		in[i] = *particles[i];
-	}
+	Particle *tempBuffer = bufferIN;
+	bufferIN = bufferOUT;
+	bufferOUT = tempBuffer;
+	/*
+	vector<Particle> &tempVector = cpuParticles;
+	cpuParticles = outParticles;
+	outParticles = tempVector;
+	*/
+}
 
-	Particle *bufferIN, *bufferOUT;
+void updateParticlesCUDA(const vector<Particle> &particles) {
+	calcForce<<<PARTICLE_COUNT/ 1024, 1024 >>>(bufferIN, bufferOUT);
+	cudaDeviceSynchronize();
+	cudaMemcpy((void*)&particles[0], bufferOUT, dataSize, cudaMemcpyDeviceToHost);
+	
+	swapBuffers();
+}
 
+void cudaInfo() {
+	// Get CUDA device
+	int device;
+	cudaGetDevice(&device);
+
+	// Get CUDA device
+	cudaDeviceProp properites;
+	cudaGetDeviceProperties(&properites, device);
+
+	// Display properties
+	cout << "-----------------------" << endl;
+	cout << "Name: " << properites.name << endl;
+	cout << "CUDA Capability: " << properites.major << "." << properites.minor << endl;
+	cout << "Core: " << properites.multiProcessorCount << endl;
+	cout << "Memory: " << properites.totalGlobalMem / (1024 * 1024) << "MB" << endl;
+	cout << "Clock freq: " << properites.clockRate / 1000 << "MHz" << endl;
+	cout << "-----------------------" << endl;
+}
+
+void setUpCUDA(const vector<Particle> &particles) {
+	cudaInfo();
 	cudaMalloc((void**)&bufferIN, dataSize);
 	cudaMalloc((void**)&bufferOUT, dataSize);
+	cudaMemcpy(bufferIN, &particles.at(0), dataSize, cudaMemcpyHostToDevice);
+}
 
-	cudaMemcpy(bufferIN, &in[0], dataSize, cudaMemcpyHostToDevice);
-
-	calcForce<<<ELEMENTS, 1>>>(bufferIN, bufferOUT);
-
-	cudaDeviceSynchronize();
-
-	cudaMemcpy(&out[0], bufferOUT, dataSize, cudaMemcpyDeviceToHost);
-
+// Delete the buffers
+void endCUDA() {
 	cudaFree(bufferIN);
 	cudaFree(bufferOUT);
-	for (unsigned int i = 0; i < ELEMENTS; i++) {
-		for (unsigned int xx = 0; xx < 3; xx++) {
-			particles[i]->pos[xx] = out[i].pos[xx];
-			particles[i]->velocity[xx] = out[i].velocity[xx];
-		}
-	}
 }

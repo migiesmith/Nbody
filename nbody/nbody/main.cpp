@@ -8,6 +8,8 @@
 
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+
+#include "SimulationInformation.h"
 #include "kernel.h"
 
 #include <stdio.h>
@@ -24,7 +26,6 @@
 #include "Renderer.h"
 #include "Shader.h"
 #include "Util.h"
-#include "Particle.h"
 
 
 using namespace std;
@@ -37,7 +38,7 @@ map<string, unsigned int> textures;
 map<string, Shader*> shaders;
 
 
-vector<Particle*> particles;
+vector<Particle> particles;
 
 
 vec3 camPos = vec3(-SIM_WIDTH*1.5f, 0.0f, SIM_DEPTH*0.6f);
@@ -89,17 +90,17 @@ void renderCube(const float width, const float height, const float depth) {
 void calcForce() {
 #pragma omp parallel for num_threads(8)
 	for (int i = 0; i < particles.size(); i++) {
-		Particle* p = particles[i];
+		Particle& p = particles.at(i);
 		Particle* other;
 		float vel[3] = { 0.0f, 0.0f, 0.0f };
 		for (int j = 0; j < particles.size(); j++) {
-			other = particles[j];
+			other = &particles.at(j);
 			if (i == j)
 				continue;
 			float distVec[3] = { 
-				other->pos[0] - p->pos[0],
-				other->pos[1] - p->pos[1],
-				other->pos[2] - p->pos[2]
+				other->pos[0] - p.pos[0],
+				other->pos[1] - p.pos[1],
+				other->pos[2] - p.pos[2]
 			};
 			// Dot product + softening
 			float dist = (distVec[0] * distVec[0] + distVec[1] * distVec[1] + distVec[2] * distVec[2]) + EPS;
@@ -110,16 +111,16 @@ void calcForce() {
 				vel[2] += distVec[2] * invDist3;
 			}
 		}
-		p->velocity[0] += PHYSICS_TIME * vel[0] * DAMPENING;
-		p->velocity[1] += PHYSICS_TIME * vel[1] * DAMPENING;
-		p->velocity[2] += PHYSICS_TIME * vel[2] * DAMPENING;
-		p->pos[0] += p->velocity[0];
-		p->pos[1] += p->velocity[1];
-		p->pos[2] += p->velocity[2];
+		p.velocity[0] += PHYSICS_TIME * vel[0] * DAMPENING;
+		p.velocity[1] += PHYSICS_TIME * vel[1] * DAMPENING;
+		p.velocity[2] += PHYSICS_TIME * vel[2] * DAMPENING;
+		p.pos[0] += p.velocity[0];
+		p.pos[1] += p.velocity[1];
+		p.pos[2] += p.velocity[2];
 
-		p->pos[0] = min(max(p->pos[0], -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
-		p->pos[1] = min(max(p->pos[1], -SIM_HEIGHT / 2.0f), SIM_HEIGHT / 2.0f);
-		p->pos[2] = min(max(p->pos[2], -SIM_DEPTH / 2.0f), SIM_DEPTH / 2.0f);
+		p.pos[0] = min(max(p.pos[0], -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
+		p.pos[1] = min(max(p.pos[1], -SIM_HEIGHT / 2.0f), SIM_HEIGHT / 2.0f);
+		p.pos[2] = min(max(p.pos[2], -SIM_DEPTH / 2.0f), SIM_DEPTH / 2.0f);
 	}
 }
 
@@ -134,8 +135,7 @@ void update(float deltaTime) {
 }
 
 void updateCUDA(float deltaTime) {
-	updateParticles(particles);
-
+	updateParticlesCUDA(particles);
 	vec4 newCamPos = vec4(camPos, 1.0f) * glm::rotate(mat4(1.0f), pi<float>() * 0.001f, vec3(0, 1, 0));
 	camPos.x = newCamPos.x;
 	camPos.y = newCamPos.y;
@@ -162,10 +162,10 @@ void render() {
 	
 	glPointSize(2.0f);
 	for (auto p : particles) {
-		float speed = abs(p->velocity[0]) * abs(p->velocity[1]) * abs(p->velocity[2]) + 0.2f;
+		float speed = abs(p.velocity[0]) * abs(p.velocity[1]) * abs(p.velocity[2]) + 0.2f;
 		glUniform4f(currentShader->getUniformLoc("colour"), speed, speed, speed, 1);
 		glBegin(GL_POINTS);
-		glVertex3f(p->pos[0], p->pos[1], p->pos[2]);
+		glVertex3f(p.pos[0], p.pos[1], p.pos[2]);
 		glEnd();
 	}
 
@@ -197,32 +197,14 @@ void generateParticles(int particleCount) {
 	std::uniform_int_distribution<std::mt19937::result_type> distD(0, SIM_DEPTH*0.9f);
 
 	for (unsigned int i = 0; i < particleCount; i++) {
-			Particle* p = new Particle();
-			p->pos[0] = distW(rng) - SIM_WIDTH*0.5f;
-			p->pos[1] = distH(rng) - SIM_HEIGHT*0.5f;
-			p->pos[2] = distD(rng) - SIM_DEPTH*0.5f;
-			particles.push_back(p);
+		Particle p;
+		p.pos[0] = distW(rng) - SIM_WIDTH*0.5f;
+		p.pos[1] = distH(rng) - SIM_HEIGHT*0.5f;
+		p.pos[2] = distD(rng) - SIM_DEPTH*0.5f;
+		particles.push_back(p);
 	}
 }
 
-void cudaInfo() {
-	// Get CUDA device
-	int device;
-	cudaGetDevice(&device);
-
-	// Get CUDA device
-	cudaDeviceProp properites;
-	cudaGetDeviceProperties(&properites, device);
-
-	// Display properties
-	cout << "-----------------------" << endl;
-	cout << "Name: " << properites.name << endl;
-	cout << "CUDA Capability: " << properites.major << "." << properites.minor << endl;
-	cout << "Core: " << properites.multiProcessorCount << endl;
-	cout << "Memory: " << properites.totalGlobalMem / (1024 * 1024) << "MB" << endl;
-	cout << "Clock freq: " << properites.clockRate / 1000 << "MHz" << endl;
-	cout << "-----------------------" << endl;
-}
 
 int main(){
 	bool useCUDA = true;
@@ -234,8 +216,7 @@ int main(){
 
 	if (useCUDA) {
 		// Initialise CUDA
-		cudaSetDevice(0);
-		cudaInfo();
+		setUpCUDA(particles);
 		Renderer::getInstance().setUpdate(updateCUDA);
 	}else{
 		Renderer::getInstance().setUpdate(update);
@@ -246,8 +227,8 @@ int main(){
 
 
 	// Start the renderer and return any error codes on completion
-	return Renderer::getInstance().start(1280, 720);
-	cin.get();
+	Renderer::getInstance().start(1280, 720);
+	endCUDA();
     return 0;
 }
 
