@@ -33,8 +33,6 @@ using namespace std::chrono;
 using namespace glm;
 using namespace Util;
 
-
-map<string, unsigned int> textures;
 map<string, Shader*> shaders;
 
 
@@ -42,6 +40,7 @@ vector<Particle> particles;
 
 
 vec3 camPos = vec3(-SIM_WIDTH*1.5f, 0.0f, SIM_DEPTH*0.6f);
+float timePast = 0.0f;
 
 
 void init() {
@@ -54,7 +53,7 @@ void init() {
 
 void renderCube(const float width, const float height, const float depth) {
 	Shader* currentShader = Renderer::getInstance().getActiveShader();
-	glUniform4f(currentShader->getUniformLoc("colour"), 0.5f, 0.0f, 0.0f, 1.0f);
+	glUniform4f(currentShader->getUniformLoc("colour"), 0.3f, 0.0f, 0.0f, 0.75f);
 	glBegin(GL_LINE_LOOP);
 	glVertex3f(-width / 2, -height / 2, -depth / 2);
 	glVertex3f(-width / 2, height / 2, -depth / 2);
@@ -124,23 +123,24 @@ void calcForce() {
 	}
 }
 
-
-void update(float deltaTime) {
-	calcForce();
-
-	vec4 newCamPos = vec4(camPos, 1.0f) * glm::rotate(mat4(1.0f), pi<float>() * 0.001f, vec3(0, 1, 0));
+void updateCamera(float deltaTime) {
+	timePast += deltaTime;
+	vec4 newCamPos = vec4(camPos, 1.0f) * glm::rotate(mat4(1.0f), pi<float>() * deltaTime * 0.25f, vec3(0, 1, 0));
 	camPos.x = newCamPos.x;
 	camPos.y = newCamPos.y;
 	camPos.z = newCamPos.z;
+}
+
+void update(float deltaTime) {
+	calcForce();
+	updateCamera(deltaTime);
 }
 
 void updateCUDA(float deltaTime) {
 	updateParticlesCUDA(particles);
-	vec4 newCamPos = vec4(camPos, 1.0f) * glm::rotate(mat4(1.0f), pi<float>() * 0.001f, vec3(0, 1, 0));
-	camPos.x = newCamPos.x;
-	camPos.y = newCamPos.y;
-	camPos.z = newCamPos.z;
+	updateCamera(deltaTime);
 }
+
 
 void render() {
 
@@ -154,16 +154,18 @@ void render() {
 	float h = SIM_HEIGHT * (1.0f / ratio);
 
 	// Set the MVP matrix
-	mat4 MVP = glm::perspective(45.0f, ratio, 0.5f, 5000.0f) * glm::lookAt(camPos, vec3(0, 0, 0), vec3(0, 1, 0));
+	mat4 MVP = glm::perspective(45.0f, ratio, 0.5f, 5000.0f) * glm::lookAt(camPos + vec3(0.0f, sin(timePast*0.25f) * SIM_HEIGHT * 0.5f, 0.0f), vec3(0, 0, 0), vec3(0, 1, 0));
 	glUniformMatrix4fv(currentShader->getUniformLoc("MVP"), 1, false, value_ptr(MVP));
 
 	glDisable(GL_CULL_FACE);
 
 	
-	glPointSize(2.0f);
+	glPointSize(1.0f);
 	for (auto p : particles) {
-		float speed = abs(p.velocity[0]) * abs(p.velocity[1]) * abs(p.velocity[2]) + 0.2f;
-		glUniform4f(currentShader->getUniformLoc("colour"), speed, speed, speed, 1);
+		float colour = abs(p.velocity[0]) * abs(p.velocity[1]) * abs(p.velocity[2]);
+		colour /= SIM_WIDTH * 0.5;
+		colour += 0.2f;
+		glUniform4f(currentShader->getUniformLoc("colour"), colour, colour, colour, 0.8f);
 		glBegin(GL_POINTS);
 		glVertex3f(p.pos[0], p.pos[1], p.pos[2]);
 		glEnd();
@@ -192,9 +194,9 @@ void generateParticles(int particleCount) {
 	particles.reserve(particleCount);
 	std::mt19937 rng;
 	rng.seed(std::random_device()());
-	std::uniform_int_distribution<std::mt19937::result_type> distW(0, SIM_WIDTH*0.9f);
-	std::uniform_int_distribution<std::mt19937::result_type> distH(0, SIM_HEIGHT*0.9f);
-	std::uniform_int_distribution<std::mt19937::result_type> distD(0, SIM_DEPTH*0.9f);
+	std::uniform_int_distribution<std::mt19937::result_type> distW(0, SIM_WIDTH);
+	std::uniform_int_distribution<std::mt19937::result_type> distH(0, SIM_HEIGHT);
+	std::uniform_int_distribution<std::mt19937::result_type> distD(0, SIM_DEPTH);
 
 	for (unsigned int i = 0; i < particleCount; i++) {
 		Particle p;
@@ -217,8 +219,10 @@ int main(){
 	if (useCUDA) {
 		// Initialise CUDA
 		setUpCUDA(particles);
+		cout << "|CUDA using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------";
 		Renderer::getInstance().setUpdate(updateCUDA);
 	}else{
+		cout << "|-------------------------------" << endl << "|CPU using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------";
 		Renderer::getInstance().setUpdate(update);
 	}
 

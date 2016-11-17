@@ -1,6 +1,5 @@
 #include "Renderer.h"
 
-
 int Renderer::start(const int width, const int height) {
 	this->_width = width;
 	this->_height = height;
@@ -35,6 +34,7 @@ int Renderer::start(const int width, const int height) {
 		glfwSwapBuffers(this->_window);
 
 	} while (glfwWindowShouldClose(this->_window) == false);
+	glfwTerminate();
 
 	return 0;
 }
@@ -47,6 +47,7 @@ int Renderer::setupWindow() {
 	}
 
 	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
@@ -54,7 +55,7 @@ int Renderer::setupWindow() {
 	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	//glfwWindowHint(GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	this->_window = glfwCreateWindow(this->_width, this->_height, "Dungeon Crawler", NULL, NULL);
+	this->_window = glfwCreateWindow(this->_width, this->_height, "N Body", NULL, NULL);
 
 	if (!_window) {
 		fprintf(stderr, "Window failed to create");

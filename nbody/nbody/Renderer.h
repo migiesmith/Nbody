@@ -23,8 +23,8 @@ private:
 	// The render function
 	void(*renderFunction)();
 	// The render function
-	void(*keyCallbackFunction)(GLFWwindow*, int, int, int, int);
-
+	void(*keyCallbackFunction)(GLFWwindow*, int, int, int, int); 
+	
 
 public:
 

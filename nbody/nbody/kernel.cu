@@ -10,22 +10,17 @@ using namespace std;
 #endif // !KERNEL
 
 __global__ void calcForce(const Particle *in, Particle *out) {
-	// Get block index
-	unsigned int blockIDX = blockIdx.x;
-	// Get thread index
-	unsigned int threadIDX = threadIdx.x;
-	// Get the number of threads per block
-	unsigned int blockDIM = blockDim.x;
 	// Get the thread's unique ID  - (blockIDX * blockDIM) + threadIDX
-	unsigned int idx = (blockIDX * blockDIM) + threadIDX;
+	unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-	Particle other;
-
+	Particle other; // Reference to another particle
 	float vel[3] = { 0.0f, 0.0f, 0.0f };
 	for (int j = 0; j < PARTICLE_COUNT; j++) {
 		other = in[j];
+		// Don't calculate against myself
 		if (idx == j)
 			continue;
+		// Calculate the distance between the two particles
 		float distVec[3] = {
 			other.pos[0] - in[idx].pos[0],
 			other.pos[1] - in[idx].pos[1],
@@ -41,6 +36,7 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 		}
 	}
 	
+	// Update this particle
 	out[idx].velocity[0] = in[idx].velocity[0] + PHYSICS_TIME * vel[0] * DAMPENING;
 	out[idx].velocity[1] = in[idx].velocity[1] + PHYSICS_TIME * vel[1] * DAMPENING;
 	out[idx].velocity[2] = in[idx].velocity[2] + PHYSICS_TIME * vel[2] * DAMPENING;
@@ -54,19 +50,14 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 }
 
 void swapBuffers() {
-
 	Particle *tempBuffer = bufferIN;
 	bufferIN = bufferOUT;
-	bufferOUT = tempBuffer;
-	/*
-	vector<Particle> &tempVector = cpuParticles;
-	cpuParticles = outParticles;
-	outParticles = tempVector;
-	*/
+	bufferOUT = tempBuffer;	
 }
 
 void updateParticlesCUDA(const vector<Particle> &particles) {
-	calcForce<<<PARTICLE_COUNT/ 1024, 1024 >>>(bufferIN, bufferOUT);
+
+	calcForce<<<PARTICLE_COUNT / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(bufferIN, bufferOUT);
 	cudaDeviceSynchronize();
 	cudaMemcpy((void*)&particles[0], bufferOUT, dataSize, cudaMemcpyDeviceToHost);
 	
@@ -83,13 +74,13 @@ void cudaInfo() {
 	cudaGetDeviceProperties(&properites, device);
 
 	// Display properties
-	cout << "-----------------------" << endl;
-	cout << "Name: " << properites.name << endl;
-	cout << "CUDA Capability: " << properites.major << "." << properites.minor << endl;
-	cout << "Core: " << properites.multiProcessorCount << endl;
-	cout << "Memory: " << properites.totalGlobalMem / (1024 * 1024) << "MB" << endl;
-	cout << "Clock freq: " << properites.clockRate / 1000 << "MHz" << endl;
-	cout << "-----------------------" << endl;
+	cout << "|-------------------------------" << endl;
+	cout << "|Name: " << properites.name << endl;
+	cout << "|CUDA Capability: " << properites.major << "." << properites.minor << endl;
+	cout << "|Cores: " << properites.multiProcessorCount << endl;
+	cout << "|Memory: " << properites.totalGlobalMem / (1024 * 1024) << "MB" << endl;
+	cout << "|Clock freq: " << properites.clockRate / 1000 << "MHz" << endl;
+	cout << "|-------------------------------" << endl;
 }
 
 void setUpCUDA(const vector<Particle> &particles) {

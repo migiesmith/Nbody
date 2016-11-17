@@ -11,3 +11,4 @@
 #define EPS 3E4
 
 #define PARTICLE_COUNT 8192
+#define THREADS_PER_BLOCK 1024
