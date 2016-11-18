@@ -182,7 +182,9 @@
     <None Include="..\resources\shaders\colour_passthrough\colour_passthrough.vert" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="kernel.cu" />
+    <CudaCompile Include="kernel.cu">
+      <FastMath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</FastMath>
+    </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
