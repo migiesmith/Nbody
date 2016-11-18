@@ -87,7 +87,7 @@ void renderCube(const float width, const float height, const float depth) {
 }
 
 void calcForce() {
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for num_threads(8)
 	for (int i = 0; i < particles.size(); i++) {
 		Particle& p = particles.at(i);
 		Particle* other;
@@ -102,9 +102,9 @@ void calcForce() {
 				other->pos[2] - p.pos[2]
 			};
 			// Dot product + softening
-			float dist = (distVec[0] * distVec[0] + distVec[1] * distVec[1] + distVec[2] * distVec[2]) + EPS;
-			if (dist > 0.1f) {
-				float invDist3 = pow(1.0f / sqrtf(dist), 3);
+			float sqrDist = (distVec[0] * distVec[0] + distVec[1] * distVec[1] + distVec[2] * distVec[2]) + EPS;
+			if (sqrDist > 0.1f) {
+				float invDist3 = pow(1.0f / sqrtf(sqrDist), 3);
 				vel[0] += distVec[0] * invDist3;
 				vel[1] += distVec[1] * invDist3;
 				vel[2] += distVec[2] * invDist3;
@@ -132,13 +132,85 @@ void updateCamera(float deltaTime) {
 }
 
 void update(float deltaTime) {
+#if RUN_FOR_RESULTS
+	static vector<int> results(ITERATIONS);
+	auto start = system_clock::now();
+	static int iteration = 0;
+#endif
+
 	calcForce();
+
+#if RUN_FOR_RESULTS
+	// Calculate the time taken
+	auto end = system_clock::now();
+	// Get the start time
+	auto timeTaken = end - start;
+	results[iteration] = duration_cast<milliseconds>(timeTaken).count();
+	iteration++;
+
+	if (iteration == ITERATIONS - 1) {
+		std::stringstream ss;
+		ss << "cpu_data_" << CPU_THREADS << ".csv";
+		std::string fileName = ss.str();
+		// Calculate the average timing and save the results to a csv file
+		ofstream data(fileName, ofstream::out);
+		unsigned int average = 0;
+		for (unsigned int i = 0; i < ITERATIONS; i++) {
+			data << i << "," << results[i] << endl;
+			average += results[i];
+		}
+		average /= ITERATIONS;
+
+		data << "Average," << average << endl;
+		data.close();
+		// Close the program
+		glfwSetWindowShouldClose(Renderer::getWindow(), GL_TRUE);
+	}
+#endif
+#if RENDER
 	updateCamera(deltaTime);
+#endif
 }
 
 void updateCUDA(float deltaTime) {
+#if RUN_FOR_RESULTS
+	static vector<int> results(ITERATIONS);
+	auto start = system_clock::now();
+	static int iteration = 0;
+#endif
+
 	updateParticlesCUDA(particles);
+
+#if RUN_FOR_RESULTS
+	// Calculate the time taken
+	auto end = system_clock::now();
+	// Get the start time
+	auto timeTaken = end - start;
+	results[iteration] = duration_cast<milliseconds>(timeTaken).count();
+	iteration++;
+
+	if (iteration == ITERATIONS) {
+		std::stringstream ss;
+		ss << "gpu_data_" << PARTICLE_COUNT << "_" << THREADS_PER_BLOCK << ".csv";
+		std::string fileName = ss.str();
+		// Calculate the average timing and save the results to a csv file
+		ofstream data(fileName, ofstream::out);
+		unsigned int average = 0;
+		for (unsigned int i = 0; i < ITERATIONS; i++) {
+			data << i << "," << results[i] << endl;
+			average += results[i];
+		}
+		average /= ITERATIONS;
+
+		data << "Average," << average << endl;
+		data.close();
+		// Close the program
+		glfwSetWindowShouldClose(Renderer::getWindow(), GL_TRUE);
+	}
+#endif
+#if RENDER
 	updateCamera(deltaTime);
+#endif
 }
 
 
@@ -163,7 +235,6 @@ void render() {
 	glPointSize(1.0f);
 	for (auto p : particles) {
 		float colour = abs(p.velocity[0]) * abs(p.velocity[1]) * abs(p.velocity[2]);
-		colour /= SIM_WIDTH * 0.5;
 		colour += 0.2f;
 		glUniform4f(currentShader->getUniformLoc("colour"), colour, colour, colour, 0.8f);
 		glBegin(GL_POINTS);
@@ -175,19 +246,10 @@ void render() {
 
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-
-	
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {	
 	if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
-
+		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
-	/*else if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
-		renderLensFlare = !renderLensFlare;
-	}
-
-	if (scene)
-		scene->keyCallback(window, key, scancode, action, mods);
-	*/
 }
 
 void generateParticles(int particleCount) {
@@ -209,28 +271,33 @@ void generateParticles(int particleCount) {
 
 
 int main(){
-	bool useCUDA = true;
-	generateParticles(PARTICLE_COUNT);
-	
+	generateParticles(PARTICLE_COUNT);	
 
 	// Set the functions for the renderer to call
 	Renderer::getInstance().setInit(init);
 
-	if (useCUDA) {
-		// Initialise CUDA
-		setUpCUDA(particles);
-		cout << "|CUDA using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------";
-		Renderer::getInstance().setUpdate(updateCUDA);
-	}else{
-		cout << "|-------------------------------" << endl << "|CPU using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------";
-		Renderer::getInstance().setUpdate(update);
-	}
+#if USE_CUDA
+	// Initialise CUDA
+	setUpCUDA(particles);
+	cout << "|CUDA using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------" << endl << endl;
+	Renderer::getInstance().setUpdate(updateCUDA);
+#else
+	cout << "|-------------------------------" << endl << "|CPU using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------";
+	Renderer::getInstance().setUpdate(update);
+#endif
 
+#if RENDER
 	Renderer::getInstance().setRender(render);
 	Renderer::getInstance().setKeyCallback(keyCallback);
+#endif
 
+#if RUN_FOR_RESULTS
+	cout << "Running for Results.." << endl;
+#else
+	cout << "!!! Not Running for Results !!!" << endl;
+	cout << "This will run indefinitely and not gather any data" << endl;
+#endif
 
-	// Start the renderer and return any error codes on completion
 	Renderer::getInstance().start(1280, 720);
 	endCUDA();
     return 0;
