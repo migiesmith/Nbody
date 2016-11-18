@@ -9,6 +9,8 @@ using namespace std;
 	auto dataSize = sizeof(Particle) * PARTICLE_COUNT;
 #endif // !KERNEL
 
+
+// Calculate the forces applying to the particles
 __global__ void calcForce(const Particle *in, Particle *out) {
 	// Get the thread's unique ID  - (blockIDX * blockDIM) + threadIDX
 	unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -44,23 +46,27 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 	out[idx].pos[1] = in[idx].pos[1] + out[idx].velocity[1];
 	out[idx].pos[2] = in[idx].pos[2] + out[idx].velocity[2];
 
+	// Clamp to bounds
 	out[idx].pos[0] = min(max(out[idx].pos[0], -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
 	out[idx].pos[1] = min(max(out[idx].pos[1], -SIM_HEIGHT / 2.0f), SIM_HEIGHT / 2.0f);
 	out[idx].pos[2] = min(max(out[idx].pos[2], -SIM_DEPTH / 2.0f), SIM_DEPTH / 2.0f);
 }
 
+// Swap the input and output buffers (saves passing data to the GPU every frame)
 void swapBuffers() {
 	Particle *tempBuffer = bufferIN;
 	bufferIN = bufferOUT;
 	bufferOUT = tempBuffer;	
 }
 
+// Update the particles on the gpu and store them in the passed in vector
 void updateParticlesCUDA(const vector<Particle> &particles) {
 
 	calcForce<<<PARTICLE_COUNT / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(bufferIN, bufferOUT);
 	cudaDeviceSynchronize();
 	cudaMemcpy((void*)&particles[0], bufferOUT, dataSize, cudaMemcpyDeviceToHost);
 	
+	// Swap the in and out buffers
 	swapBuffers();
 }
 

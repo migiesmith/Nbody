@@ -15,6 +15,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <iomanip>
+#include <string>
+#include <windows.h>
 #include <vector>
 #include <map>
 #include <sstream>
@@ -86,16 +89,26 @@ void renderCube(const float width, const float height, const float depth) {
 	glEnd();
 }
 
+void show_percent(int it) {
+	int dashes = (int)((it*0.5f / (float)ITERATIONS) * 100);
+	cout << std::string(dashes+10, '\b') << "|" << std::string(dashes, '-') << "| " << dashes*2 << "%";
+}
+
+// Calculate the forces applying to the particles
 void calcForce() {
-//#pragma omp parallel for num_threads(8)
+#if USE_OPEN_MP
+#pragma omp parallel for num_threads(8)
+#endif
 	for (int i = 0; i < particles.size(); i++) {
 		Particle& p = particles.at(i);
 		Particle* other;
 		float vel[3] = { 0.0f, 0.0f, 0.0f };
 		for (int j = 0; j < particles.size(); j++) {
-			other = &particles.at(j);
+			other = &particles.at(j); // Reference to another particle
+			// Don't calculate against myself
 			if (i == j)
 				continue;
+			// Calculate the distance between the two particles
 			float distVec[3] = { 
 				other->pos[0] - p.pos[0],
 				other->pos[1] - p.pos[1],
@@ -110,6 +123,7 @@ void calcForce() {
 				vel[2] += distVec[2] * invDist3;
 			}
 		}
+		// Update this particle
 		p.velocity[0] += PHYSICS_TIME * vel[0] * DAMPENING;
 		p.velocity[1] += PHYSICS_TIME * vel[1] * DAMPENING;
 		p.velocity[2] += PHYSICS_TIME * vel[2] * DAMPENING;
@@ -117,6 +131,7 @@ void calcForce() {
 		p.pos[1] += p.velocity[1];
 		p.pos[2] += p.velocity[2];
 
+		// Clamp to bounds
 		p.pos[0] = min(max(p.pos[0], -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
 		p.pos[1] = min(max(p.pos[1], -SIM_HEIGHT / 2.0f), SIM_HEIGHT / 2.0f);
 		p.pos[2] = min(max(p.pos[2], -SIM_DEPTH / 2.0f), SIM_DEPTH / 2.0f);
@@ -124,6 +139,7 @@ void calcForce() {
 }
 
 void updateCamera(float deltaTime) {
+	// Rotate the camera
 	timePast += deltaTime;
 	vec4 newCamPos = vec4(camPos, 1.0f) * glm::rotate(mat4(1.0f), pi<float>() * deltaTime * 0.25f, vec3(0, 1, 0));
 	camPos.x = newCamPos.x;
@@ -150,7 +166,7 @@ void update(float deltaTime) {
 
 	if (iteration == ITERATIONS - 1) {
 		std::stringstream ss;
-		ss << "cpu_data_" << CPU_THREADS << ".csv";
+		ss << "..\\results\\cpu_data_" << PARTICLE_COUNT << "_" << CPU_THREADS << ".csv";
 		std::string fileName = ss.str();
 		// Calculate the average timing and save the results to a csv file
 		ofstream data(fileName, ofstream::out);
@@ -166,6 +182,8 @@ void update(float deltaTime) {
 		// Close the program
 		glfwSetWindowShouldClose(Renderer::getWindow(), GL_TRUE);
 	}
+
+	show_percent(iteration);
 #endif
 #if RENDER
 	updateCamera(deltaTime);
@@ -191,7 +209,7 @@ void updateCUDA(float deltaTime) {
 
 	if (iteration == ITERATIONS) {
 		std::stringstream ss;
-		ss << "gpu_data_" << PARTICLE_COUNT << "_" << THREADS_PER_BLOCK << ".csv";
+		ss << "..\\results\\gpu_data_" << PARTICLE_COUNT << "_" << THREADS_PER_BLOCK << ".csv";
 		std::string fileName = ss.str();
 		// Calculate the average timing and save the results to a csv file
 		ofstream data(fileName, ofstream::out);
@@ -207,6 +225,7 @@ void updateCUDA(float deltaTime) {
 		// Close the program
 		glfwSetWindowShouldClose(Renderer::getWindow(), GL_TRUE);
 	}
+	show_percent(iteration);
 #endif
 #if RENDER
 	updateCamera(deltaTime);
@@ -256,15 +275,15 @@ void generateParticles(int particleCount) {
 	particles.reserve(particleCount);
 	std::mt19937 rng;
 	rng.seed(std::random_device()());
-	std::uniform_int_distribution<std::mt19937::result_type> distW(0, SIM_WIDTH);
-	std::uniform_int_distribution<std::mt19937::result_type> distH(0, SIM_HEIGHT);
-	std::uniform_int_distribution<std::mt19937::result_type> distD(0, SIM_DEPTH);
-
+	std::uniform_real_distribution<float> distW(0, 2);
+	std::uniform_real_distribution<float> distH(0, 2);
+	std::uniform_real_distribution<float> distD(0, 2);
+	
 	for (unsigned int i = 0; i < particleCount; i++) {
 		Particle p;
-		p.pos[0] = distW(rng) - SIM_WIDTH*0.5f;
-		p.pos[1] = distH(rng) - SIM_HEIGHT*0.5f;
-		p.pos[2] = distD(rng) - SIM_DEPTH*0.5f;
+		p.pos[0] = (distW(rng)-1.0f) * SIM_WIDTH*0.5f;
+		p.pos[1] = (distH(rng)-1.0f) * SIM_HEIGHT*0.5f;
+		p.pos[2] = (distD(rng)-1.0f) * SIM_DEPTH*0.5f;
 		particles.push_back(p);
 	}
 }
@@ -282,7 +301,7 @@ int main(){
 	cout << "|CUDA using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------" << endl << endl;
 	Renderer::getInstance().setUpdate(updateCUDA);
 #else
-	cout << "|-------------------------------" << endl << "|CPU using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------";
+	cout << "|-------------------------------" << endl << "|CPU using " << PARTICLE_COUNT << " Particles." << endl << "|-------------------------------" << endl;
 	Renderer::getInstance().setUpdate(update);
 #endif
 
