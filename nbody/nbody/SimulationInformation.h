@@ -2,7 +2,7 @@
 
 #define USE_CUDA false
 
-#define USE_OPEN_MP true && !USE_CUDA
+#define USE_OPEN_MP false && !USE_CUDA
 #define CPU_THREADS 8
 
 #define RUN_FOR_RESULTS true
@@ -22,6 +22,6 @@
  If these values are modified, the project must
  be rebuilt for the kernel to receive the changes
  */
-#define PARTICLE_COUNT 2048
-#define THREADS_PER_BLOCK 64
+#define PARTICLE_COUNT 1024
+#define THREADS_PER_BLOCK 1024
 

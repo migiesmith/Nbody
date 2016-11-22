@@ -3,14 +3,14 @@ C:\Program Files (x86)\Windows Kits\8.1\Include\shared\minwindef.h(130): warning
   C:\Users\40111906\Desktop\nbody\nbody\include\GLFW/glfw3.h(85): note: see previous definition of 'APIENTRY'
 main.cpp(102): warning C4018: '<': signed/unsigned mismatch
 main.cpp(106): warning C4018: '<': signed/unsigned mismatch
-main.cpp(118): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-main.cpp(164): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
-main.cpp(207): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
-main.cpp(282): warning C4018: '<': signed/unsigned mismatch
+main.cpp(123): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+main.cpp(169): warning C4244: '=': conversion from '__int64' to 'float', possible loss of data
+main.cpp(181): warning C4244: '+=': conversion from 'float' to 'unsigned int', possible loss of data
+main.cpp(287): warning C4018: '<': signed/unsigned mismatch
   Generating code
-  7 of 644 functions ( 1.1%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+  0 of 642 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    34 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   nbody.vcxproj -> C:\Users\40111906\Desktop\nbody\nbody\Release\nbody.exe
   nbody.vcxproj -> C:\Users\40111906\Desktop\nbody\nbody\Release\nbody.pdb (Full PDB)

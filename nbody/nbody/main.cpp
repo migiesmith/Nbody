@@ -149,7 +149,7 @@ void updateCamera(float deltaTime) {
 
 void update(float deltaTime) {
 #if RUN_FOR_RESULTS
-	static vector<int> results(ITERATIONS);
+	static vector<float> results(ITERATIONS);
 	auto start = system_clock::now();
 	static int iteration = 0;
 #endif
@@ -192,8 +192,8 @@ void update(float deltaTime) {
 
 void updateCUDA(float deltaTime) {
 #if RUN_FOR_RESULTS
-	static vector<int> results(ITERATIONS);
-	auto start = system_clock::now();
+	static vector<float> results(ITERATIONS);
+	auto start = high_resolution_clock::now();
 	static int iteration = 0;
 #endif
 
@@ -201,10 +201,10 @@ void updateCUDA(float deltaTime) {
 
 #if RUN_FOR_RESULTS
 	// Calculate the time taken
-	auto end = system_clock::now();
+	auto end = high_resolution_clock::now();
 	// Get the start time
-	auto timeTaken = end - start;
-	results[iteration] = duration_cast<milliseconds>(timeTaken).count();
+	duration<float> timeTaken = end - start;
+	results[iteration] = timeTaken.count() * 1000.0f;
 	iteration++;
 
 	if (iteration == ITERATIONS) {
@@ -213,7 +213,7 @@ void updateCUDA(float deltaTime) {
 		std::string fileName = ss.str();
 		// Calculate the average timing and save the results to a csv file
 		ofstream data(fileName, ofstream::out);
-		unsigned int average = 0;
+		float average = 0;
 		for (unsigned int i = 0; i < ITERATIONS; i++) {
 			data << i << "," << results[i] << endl;
 			average += results[i];
