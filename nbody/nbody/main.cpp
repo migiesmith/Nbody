@@ -104,10 +104,10 @@ void calcForce() {
 		Particle* other;
 		float vel[3] = { 0.0f, 0.0f, 0.0f };
 		for (int j = 0; j < particles.size(); j++) {
-			other = &particles.at(j); // Reference to another particle
 			// Don't calculate against myself
 			if (i == j)
 				continue;
+			other = &particles.at(j); // Reference to another particle
 			// Calculate the distance between the two particles
 			float distVec[3] = { 
 				other->pos[0] - p.pos[0],
@@ -116,12 +116,10 @@ void calcForce() {
 			};
 			// Dot product + softening
 			float sqrDist = (distVec[0] * distVec[0] + distVec[1] * distVec[1] + distVec[2] * distVec[2]) + EPS;
-			if (sqrDist > 0.1f) {
-				float invDist3 = pow(1.0f / sqrtf(sqrDist), 3);
-				vel[0] += distVec[0] * invDist3;
-				vel[1] += distVec[1] * invDist3;
-				vel[2] += distVec[2] * invDist3;
-			}
+			float invDist3 = pow(1.0f / sqrtf(sqrDist), 3);
+			vel[0] += distVec[0] * invDist3;
+			vel[1] += distVec[1] * invDist3;
+			vel[2] += distVec[2] * invDist3;
 		}
 		// Update this particle
 		p.velocity[0] += PHYSICS_TIME * vel[0] * DAMPENING;

@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_CUDA false
+#define USE_CUDA true
 
 #define USE_OPEN_MP false && !USE_CUDA
 #define CPU_THREADS 8
