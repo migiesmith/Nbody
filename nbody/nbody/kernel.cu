@@ -30,12 +30,10 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 		};
 		// Dot product + softening
 		float sqrDist = (distVec[0] * distVec[0] + distVec[1] * distVec[1] + distVec[2] * distVec[2]) + EPS;
-		if (sqrDist > 0.1f) {
-			float invDist3 = pow(1.0f / sqrtf(sqrDist), 3);
-			vel[0] += distVec[0] * invDist3;
-			vel[1] += distVec[1] * invDist3;
-			vel[2] += distVec[2] * invDist3;
-		}
+		float invDist3 = pow(1.0f / sqrtf(sqrDist), 3);
+		vel[0] += distVec[0] * invDist3;
+		vel[1] += distVec[1] * invDist3;
+		vel[2] += distVec[2] * invDist3;
 	}
 	
 	// Update this particle

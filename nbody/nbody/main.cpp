@@ -97,7 +97,7 @@ void show_percent(int it) {
 // Calculate the forces applying to the particles
 void calcForce() {
 #if USE_OPEN_MP
-#pragma omp parallel for num_threads(8)
+#pragma omp parallel for num_threads(CPU_THREADS) schedule(dynamic,1)
 #endif
 	for (int i = 0; i < particles.size(); i++) {
 		Particle& p = particles.at(i);
@@ -162,7 +162,7 @@ void update(float deltaTime) {
 	results[iteration] = duration_cast<milliseconds>(timeTaken).count();
 	iteration++;
 
-	if (iteration == ITERATIONS - 1) {
+	if (iteration == ITERATIONS) {
 		std::stringstream ss;
 		ss << "..\\results\\cpu_data_" << PARTICLE_COUNT << "_" << CPU_THREADS << ".csv";
 		std::string fileName = ss.str();
