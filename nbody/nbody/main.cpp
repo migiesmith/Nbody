@@ -129,6 +129,7 @@ void calcForce() {
 		p.pos[1] += p.velocity[1];
 		p.pos[2] += p.velocity[2];
 
+
 		// Clamp to bounds
 		p.pos[0] = min(max(p.pos[0], -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
 		p.pos[1] = min(max(p.pos[1], -SIM_HEIGHT / 2.0f), SIM_HEIGHT / 2.0f);
