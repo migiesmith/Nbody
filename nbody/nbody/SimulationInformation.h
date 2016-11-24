@@ -2,10 +2,10 @@
 
 #define USE_CUDA true
 
-#define USE_OPEN_MP true && !USE_CUDA
+#define USE_OPEN_MP false && !USE_CUDA
 #define CPU_THREADS 8
 
-#define RUN_FOR_RESULTS true
+#define RUN_FOR_RESULTS false
 #define ITERATIONS 100
 
 #define PHYSICS_TIME 2.0f
@@ -24,6 +24,6 @@
  be rebuilt for the kernel to receive the changes
 !!!
  */
-#define PARTICLE_COUNT 8192*4
-#define THREADS_PER_BLOCK 1
+#define PARTICLE_COUNT 8192
+#define THREADS_PER_BLOCK 64
 
