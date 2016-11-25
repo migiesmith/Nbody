@@ -125,9 +125,6 @@ void calcForce() {
 		p.velocity[0] += PHYSICS_TIME * vel[0] * DAMPENING;
 		p.velocity[1] += PHYSICS_TIME * vel[1] * DAMPENING;
 		p.velocity[2] += PHYSICS_TIME * vel[2] * DAMPENING;
-		p.pos[0] += p.velocity[0];
-		p.pos[1] += p.velocity[1];
-		p.pos[2] += p.velocity[2];
 
 
 		// Clamp to bounds
@@ -280,9 +277,9 @@ void generateParticles(int particleCount) {
 	
 	for (unsigned int i = 0; i < particleCount; i++) {
 		Particle p;
-		p.pos[0] = (distW(rng)-1.0f) * SIM_WIDTH*0.5f;
-		p.pos[1] = (distH(rng)-1.0f) * SIM_HEIGHT*0.5f;
-		p.pos[2] = (distD(rng)-1.0f) * SIM_DEPTH*0.5f;
+		p.pos[0] = (distW(rng) - 1.0f) * SIM_WIDTH*0.5f;
+		p.pos[1] = (distH(rng) - 1.0f) * SIM_HEIGHT*0.5f;
+		p.pos[2] = (distD(rng) - 1.0f) * SIM_DEPTH*0.5f;
 		particles.push_back(p);
 	}
 }

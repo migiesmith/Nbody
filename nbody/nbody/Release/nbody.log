@@ -17,7 +17,9 @@ C:\Program Files (x86)\Windows Kits\8.1\Include\shared\minwindef.h(130): warning
 main.cpp(102): warning C4018: '<': signed/unsigned mismatch
 main.cpp(106): warning C4018: '<': signed/unsigned mismatch
 main.cpp(118): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-main.cpp(281): warning C4018: '<': signed/unsigned mismatch
+main.cpp(160): warning C4244: '=': conversion from '__int64' to 'float', possible loss of data
+main.cpp(172): warning C4244: '+=': conversion from 'float' to 'unsigned int', possible loss of data
+main.cpp(278): warning C4018: '<': signed/unsigned mismatch
   Renderer.cpp
 C:\Program Files (x86)\Windows Kits\8.1\Include\shared\minwindef.h(130): warning C4005: 'APIENTRY': macro redefinition
   C:\Users\40111906\Desktop\nbody\nbody\include\GLFW/glfw3.h(85): note: see previous definition of 'APIENTRY'
@@ -25,7 +27,7 @@ C:\Program Files (x86)\Windows Kits\8.1\Include\shared\minwindef.h(130): warning
   stdafx.cpp
   Util.cpp
   Generating code
-  All 629 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  All 635 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   nbody.vcxproj -> C:\Users\40111906\Desktop\nbody\nbody\Release\nbody.exe
   nbody.vcxproj -> C:\Users\40111906\Desktop\nbody\nbody\Release\nbody.pdb (Full PDB)
