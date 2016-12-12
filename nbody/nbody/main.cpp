@@ -125,7 +125,9 @@ void calcForce() {
 		p.velocity[0] += PHYSICS_TIME * vel[0] * DAMPENING;
 		p.velocity[1] += PHYSICS_TIME * vel[1] * DAMPENING;
 		p.velocity[2] += PHYSICS_TIME * vel[2] * DAMPENING;
-
+		p.pos[0] += p.velocity[0];
+		p.pos[1] += p.velocity[1];
+		p.pos[2] += p.velocity[2];
 
 		// Clamp to bounds
 		p.pos[0] = min(max(p.pos[0], -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
