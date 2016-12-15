@@ -4,10 +4,11 @@ using namespace std;
 
 #ifndef KERNEL
 	#define KERNEL
+	// Buffers for GPU communication
 	Particle *bufferIN, *bufferOUT;
-	vector<Particle> &outParticles = vector<Particle>();
+	// Size of the simulation in particles
 	auto dataSize = sizeof(Particle) * PARTICLE_COUNT;
-#endif // !KERNEL
+#endif
 
 
 // Calculate the forces applying to the particles
@@ -16,12 +17,10 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 	unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
 	Particle other; // Reference to another particle
+	// Velocity to apply to p this iteration
 	float vel[3] = { 0.0f, 0.0f, 0.0f };
 	for (int j = 0; j < PARTICLE_COUNT; j++) {
 		other = in[j];
-		// Don't calculate against myself
-		if (idx == j)
-			continue;
 		// Calculate the distance between the two particles
 		float distVec[3] = {
 			other.pos[0] - in[idx].pos[0],
@@ -35,16 +34,17 @@ __global__ void calcForce(const Particle *in, Particle *out) {
 		vel[1] += distVec[1] * invDist3;
 		vel[2] += distVec[2] * invDist3;
 	}
-	
-	// Update this particle
+
+	// Update this particle's velocity
 	out[idx].velocity[0] = in[idx].velocity[0] + PHYSICS_TIME * vel[0] * DAMPENING;
 	out[idx].velocity[1] = in[idx].velocity[1] + PHYSICS_TIME * vel[1] * DAMPENING;
 	out[idx].velocity[2] = in[idx].velocity[2] + PHYSICS_TIME * vel[2] * DAMPENING;
+	// Update this particle's position
 	out[idx].pos[0] = in[idx].pos[0] + out[idx].velocity[0];
 	out[idx].pos[1] = in[idx].pos[1] + out[idx].velocity[1];
 	out[idx].pos[2] = in[idx].pos[2] + out[idx].velocity[2];
 
-	// Clamp to bounds
+	// Clamp the particle within the simulation bounds
 	out[idx].pos[0] = min(max(out[idx].pos[0], -SIM_WIDTH / 2.0f), SIM_WIDTH / 2.0f);
 	out[idx].pos[1] = min(max(out[idx].pos[1], -SIM_HEIGHT / 2.0f), SIM_HEIGHT / 2.0f);
 	out[idx].pos[2] = min(max(out[idx].pos[2], -SIM_DEPTH / 2.0f), SIM_DEPTH / 2.0f);
@@ -59,9 +59,11 @@ void swapBuffers() {
 
 // Update the particles on the gpu and store them in the passed in vector
 void updateParticlesCUDA(const vector<Particle> &particles) {
-
+	// Update the particles
 	calcForce<<<PARTICLE_COUNT / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(bufferIN, bufferOUT);
+	// Wait for the GPU to finish
 	cudaDeviceSynchronize();
+	// Copy the results back to the CPU
 	cudaMemcpy((void*)&particles[0], bufferOUT, dataSize, cudaMemcpyDeviceToHost);
 	
 	// Swap the in and out buffers
@@ -69,6 +71,7 @@ void updateParticlesCUDA(const vector<Particle> &particles) {
 }
 
 // http://stackoverflow.com/questions/32530604/how-can-i-get-number-of-cores-in-cuda-device
+// Gets the number of streaming processors on the GPU
 int getSPcores(cudaDeviceProp devProp)
 {
 	int cores = 0;

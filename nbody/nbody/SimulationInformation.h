@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_CUDA false
+#define USE_CUDA true
 
 #define USE_OPEN_MP true && !USE_CUDA
 #define CPU_THREADS 8
@@ -24,6 +24,6 @@
  be rebuilt for the kernel to receive the changes
 !!!
  */
-#define PARTICLE_COUNT 512
-#define THREADS_PER_BLOCK 1
+#define PARTICLE_COUNT 8192
+#define THREADS_PER_BLOCK 32
 

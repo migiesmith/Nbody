@@ -1,7 +1,7 @@
 #version 410
 
 // Input colour
-uniform vec4 colour;
+in vec4 colour;
 
 // Outgoing colour
 layout(location = 0) out vec4 out_colour;

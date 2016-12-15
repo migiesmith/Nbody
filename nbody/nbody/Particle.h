@@ -5,6 +5,8 @@
 using namespace glm;
 
 struct Particle {
+	// Position of the particle
 	float pos[3];
-	float velocity[3] = {0.0f, 0.0f, 0.0f};
+	// Velocity of the particle
+	float velocity[3] = { 0.0f, 0.0f, 0.0f };
 };

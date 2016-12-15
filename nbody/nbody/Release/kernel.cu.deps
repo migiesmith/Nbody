@@ -390,13 +390,13 @@ C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\xmemory
 c:\users\40111906\desktop\nbody\nbody\nbody\SimulationInformation.h
 c:\users\40111906\desktop\nbody\nbody\nbody\Particle.h
 c:\users\40111906\desktop\nbody\nbody\nbody\Renderer.h
-C:\Users\40111906\Desktop\nbody\nbody\include\gl\glew.h
+C:\Users\40111906\Desktop\Nbody\nbody\include\gl\glew.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\um\GL/glu.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\shared\winapifamily.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\um\GL/gl.h
-C:\Users\40111906\Desktop\nbody\nbody\include\GLFW/glfw3.h
+C:\Users\40111906\Desktop\Nbody\nbody\include\GLFW/glfw3.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\um\GL/gl.h
-C:\Users\40111906\Desktop\nbody\nbody\include\glm\glm.hpp
+C:\Users\40111906\Desktop\Nbody\nbody\include\glm\glm.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\detail/_fixes.hpp
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\cassert
 C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\assert.h
@@ -478,19 +478,19 @@ c:\users\40111906\desktop\nbody\nbody\include\glm\vector_relational.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\integer.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\detail/func_integer.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\detail\func_integer.inl
-C:\Users\40111906\Desktop\nbody\nbody\include\glm\gtc\type_ptr.hpp
+C:\Users\40111906\Desktop\Nbody\nbody\include\glm\gtc\type_ptr.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\gtc\../gtc/quaternion.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\gtc\../gtc/constants.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\gtc\constants.inl
 c:\users\40111906\desktop\nbody\nbody\include\glm\gtc\quaternion.inl
 c:\users\40111906\desktop\nbody\nbody\include\glm\gtc\type_ptr.inl
-C:\Users\40111906\Desktop\nbody\nbody\include\glm\gtc\matrix_transform.hpp
+C:\Users\40111906\Desktop\Nbody\nbody\include\glm\gtc\matrix_transform.hpp
 c:\users\40111906\desktop\nbody\nbody\include\glm\gtc\matrix_transform.inl
 c:\users\40111906\desktop\nbody\nbody\nbody\Shader.h
 c:\users\40111906\desktop\nbody\nbody\nbody\Util.h
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\string
 C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\fstream
-C:\Users\40111906\Desktop\nbody\nbody\include\gl\freeglut.h
+C:\Users\40111906\Desktop\Nbody\nbody\include\gl\freeglut.h
 c:\users\40111906\desktop\nbody\nbody\include\gl\freeglut_std.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\um\windows.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\shared\sdkddkver.h
@@ -595,4 +595,4 @@ C:\Program Files (x86)\Windows Kits\8.1\Include\um\ime_cmodes.h
 C:\Program Files (x86)\Windows Kits\8.1\Include\um\GL/gl.h
 c:\users\40111906\desktop\nbody\nbody\include\gl\freeglut_ext.h
 C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\assert.h
-C:\Users\40111906\Desktop\nbody\nbody\include\FreeImage\FreeImage.h
+C:\Users\40111906\Desktop\Nbody\nbody\include\FreeImage\FreeImage.h
